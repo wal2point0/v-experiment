@@ -1,38 +1,237 @@
 <!doctype html>
-<html lang="en" class="h-100" data-bs-theme="auto">
+<html lang="en" class="h-100" data-bs-theme="dark">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome</title>
-      <!-- Favicons -->
-     <script src="https://code.jquery.com/jquery-4.0.0.min.js" integrity="sha256-OaVG6prZf4v69dPg6PhVattBXkcOWQB62pdZ3ORyrao=" crossorigin="anonymous"></script>
-        <script src="script.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.1.3/TweenMax.min.js" integrity="sha512-DkPsH9LzNzZaZjCszwKrooKwgjArJDiEjA5tTgr3YX4E6TYv93ICS8T41yFHJnnSmGpnf0Mvb5NhScYbwvhn2w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <!-- Custom styles for this template -->
+    <title>Voice Restaurant - Order & Create</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="style.css" rel="stylesheet">
   </head>
 
-  <body class="d-flex h-100 text-center">
+  <body class="d-flex h-100 text-center" style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); color: rgba(255, 255, 255, 0.9);">
+    <!-- FIXED ADMIN BUTTON -->
+    <button type="button" class="btn btn-primary btn-lg" id="fixedAdminButton" data-bs-toggle="modal" data-bs-target="#modalAdminLogin" title="Admin Login" style="position: fixed; top: 15px; right: 15px; z-index: 1001;">
+      <i class="bi bi-shield-lock"></i> Admin
+    </button>
+    
+    <div class="d-flex w-100 h-100 p-3 mx-auto flex-column parent" style="overflow-y: auto;">
 
-        <div class="d-flex w-100 h-100 p-3 mx-auto flex-column parent">
-            <div id="results">
-            <span id="final_span" class="final"></span>
-            <span id="interim_span" class="interim"></span>
-            <p>
-            </div>
-
-            <div id="visualization"></div>
-
-            <div id="button">
-            <svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="microphone" data-container-transform="translate(3)" viewBox="0 0 16 20" x="0px" y="0px"><path d="M4.5 0c-1.4 0-2.5 1.1-2.5 2.5v5c0 1.4 1.1 2.5 2.5 2.5s2.5-1.1 2.5-2.5v-5c0-1.4-1.1-2.5-2.5-2.5zm-4.125 6.188a.5.5 0 0 0-.375.5v.813c0 2.302 1.763 4.184 4 4.438v3.063h-2c-.6 0-1 .4-1 1h7c0-.6-.4-1-1-1h-2v-3.063c2.237-.254 4-2.136 4-4.438v-.813a.5.5 0 1 0-1 0v.813c0 1.927-1.573 3.5-3.5 3.5s-3.5-1.573-3.5-3.5v-.813a.5.5 0 0 0-.563-.5.5.5 0 0 0-.063 0z" transform="translate(3)"/></svg>
-            <div id="contents"></div>
-            </div>
-
-            <div id="viz1" class="visual"></div>
-            <div id="viz2" class="visual"></div>
-            <div id="viz3" class="visual"></div>
-            <div id="viz4" class="visual"></div>
-            <div id="tip">Press and hold to speak</div>
+      <!-- WELCOME SECTION -->
+      <div class="align-items-center justify-content-center my-auto" id="introduction" style="text-align: center;">  
+        <h1 style="font-size: 3rem; font-weight: 700; margin-bottom: 1.5rem;">🍽️ WELCOME TO OUR VOICE RESTAURANT</h1>
+        <p class="lead" style="font-size: 1.3rem; color: rgba(255, 255, 255, 0.8); margin-bottom: 2rem;">Browse our menu and order with your voice!</p>
+        <div style="margin-bottom: 1.5rem;">
+          <button type="button" class="btn btn-warning btn-lg" id="introButton">Get Started</button>
         </div>
-   </body>
+      </div>
+
+      <!-- ADMIN DASHBOARD -->
+      <div id="adminPanel" style="display: none;">
+        <div class="container-fluid">
+          <div class="row mb-4">
+            <div class="col">
+              <h2>📊 Admin Dashboard</h2>
+              <button class="btn btn-warning float-end" id="adminLogout">Logout</button>
+            </div>
+          </div>
+
+          <!-- Create Food -->
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <div class="card bg-dark">
+                <div class="card-header">➕ Create Food Item</div>
+                <div class="card-body">
+                  <form id="adminFormFood">
+                    <div class="mb-2">
+                      <input type="text" id="adminFoodName" class="form-control" placeholder="Food name" required>
+                    </div>
+                    <div class="mb-2">
+                      <input type="text" id="adminFoodDesc" class="form-control" placeholder="Description">
+                    </div>
+                    <div class="mb-2">
+                      <input type="number" id="adminFoodPrice" class="form-control" placeholder="Price" step="0.01" required>
+                    </div>
+                    <button type="button" class="btn btn-success w-100" id="adminCreateFood">Create Item</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <!-- Menu Management -->
+            <div class="col-md-6">
+              <div class="card bg-dark">
+                <div class="card-header">📋 Food Menu</div>
+                <div class="card-body" id="adminMenuList" style="max-height: 300px; overflow-y: auto;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Orders History -->
+          <div class="row">
+            <div class="col">
+              <div class="card bg-dark">
+                <div class="card-header">📦 All Orders</div>
+                <div class="card-body" id="adminOrdersList" style="max-height: 400px; overflow-y: auto;">
+                  <p class="text-muted">No orders yet</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT -->
+      <div id="mainContent" style="display: none;">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 rounded">
+          <div class="container-fluid">
+            <span class="navbar-brand">🍽️ Voice Restaurant</span>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+              <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+              <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                  <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#modalCart">
+                    <i class="bi bi-cart"></i> Cart <span class="badge bg-danger" id="cartCount">0</span>
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+
+        <!-- MENU DISPLAY -->
+        <div id="menuSection">
+          <h3 class="mb-4">📋 Menu</h3>
+          <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4" id="cards"></div>
+        </div>
+
+        <!-- VOICE CONTROL -->
+        <div id="voiceCommandFixed" class="card bg-dark border-warning mt-4">
+          <div class="card-body text-center">
+            <h5 class="card-title">🎤 Voice Commands</h5>
+            <div class="btn-group mb-3">
+              <button id="voiceStartBtn" class="btn btn-warning btn-lg">
+                <i class="bi bi-mic"></i> Start Voice
+              </button>
+            </div>
+            <div id="voiceStatus" class="text-muted small">Ready for voice input</div>
+            <div id="voiceTranscript" class="mt-2">
+              <span id="final_span" style="color: #ffc107; font-weight: bold;"></span>
+              <span id="interim_span" style="color: #6c757d;"></span>
+            </div>
+            <small class="d-block mt-2 text-muted">
+              Try: "Add pizza to cart" or "Show menu"
+            </small>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MODAL: ADMIN LOGIN -->
+    <div class="modal fade" id="modalAdminLogin" tabindex="-1" data-bs-backdrop="static">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">🔐 Admin Login</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="adminLoginForm">
+              <div class="mb-3">
+                <label for="adminUsername" class="form-label">Username</label>
+                <input type="text" class="form-control" id="adminUsername" placeholder="admin" required>
+              </div>
+              <div class="mb-3">
+                <label for="adminPassword" class="form-label">Password</label>
+                <input type="password" class="form-control" id="adminPassword" placeholder="password" required>
+              </div>
+              <small class="text-muted">Demo: admin / password</small>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="adminLoginBtn">Login</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: CREATE FOOD ITEM -->
+    <div class="modal fade" id="modalCreateFood" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Create Food Item</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="formCreateFood">
+              <div class="mb-3">
+                <label for="foodName" class="form-label">Food Name *</label>
+                <input type="text" class="form-control" id="foodName" placeholder="e.g., Cheese Pizza" required>
+              </div>
+              <div class="mb-3">
+                <label for="foodDescription" class="form-label">Description</label>
+                <textarea class="form-control" id="foodDescription" rows="3" placeholder="Delicious cheese pizza with fresh toppings..."></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="foodPrice" class="form-label">Price *</label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input type="number" class="form-control" id="foodPrice" min="0" step="0.01" placeholder="0.00" required>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="foodEmoji" class="form-label">Emoji</label>
+                <input type="text" class="form-control" id="foodEmoji" placeholder="🍕" maxlength="5">
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="voiceCreate" checked>
+                <label class="form-check-label" for="voiceCreate">
+                  Use voice input to fill this form
+                </label>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="btnCreateFood">Create Item</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: SHOPPING CART -->
+    <div class="modal fade" id="modalCart" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">🛒 Shopping Cart</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="cartItems"></div>
+            <div id="cartEmpty" class="text-center text-muted py-5">
+              <i class="bi bi-cart-x" style="font-size: 3rem;"></i>
+              <p class="mt-3">Your cart is empty. Add some delicious food!</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <div class="me-auto">
+              <h5>Total: <span id="cartTotal">$0.00</span></h5>
+            </div>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Continue Shopping</button>
+            <button type="button" class="btn btn-success" id="btnCheckout">Checkout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+  </body>
 </html>

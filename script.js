@@ -1,449 +1,409 @@
-// ----- On render -----
+// Voice Restaurant App
 $(function() {
-  document.title = "New Tab"
-  var tip;
-  var defaultBehavior = {
-    url: 'https://www.google.com/search?q=',
-    firstHit: 'https://www.google.com/search?btnI&q='
-  };
-  /*defaultBehavior = {
-    url: 'https://duckduckgo.com/?q=',
-    firstHit: 'https://duckduckgo.com/?q=!'
-  }*/
-  var keywords = [{
-    keyword: 'Facebook',
-    url: 'https://facebook.com/search/?q='
-  }, {
-    keyword: 'YouTube',
-    url: 'https://www.youtube.com/results?search_query='
-  }, {
-    keyword: 'the noun project',
-    url: 'https://thenounproject.com/search/?q='
-  }, {
-    keyword: 'HBO Go',
-    url: 'https://www.hbogo.com/#search&browseMode=browseGrid?searchTerm=',
-    suffix: '/'
-  }, {
-    keyword: 'define',
-    url: 'http://dictionary.reference.com/browse/'
-  }, {
-    keyword: ['watch', 'stream'],
-    url: 'https://www.justwatch.com/us/search?q='
-  }, {
-    keyword: 'Evernote',
-    url: 'https://www.evernote.com/Home.action?#ses=1&sh=5&sds=3&x=',
-    suffix: '&'
-  }, {
-    keyword: 'Hulu',
-    url: 'http://www.hulu.com/search?q='
-  }, {
-    keyword: 'Netflix',
-    url: 'http://www.netflix.com/search/'
-  }, {
-    keyword: 'soundcloud',
-    url: 'https://soundcloud.com/search?q='
-  }, {
-    keyword: 'rdio',
-    url: 'http://www.rdio.com/search/',
-    suffix: '/'
-  }, {
-    keyword: 'Twitter',
-    url: 'https://twitter.com/search?src=typd&q='
-  }, {
-    keyword: 'Gmail',
-    url: 'https://mail.google.com/mail/u/0/#search/'
-  }, {
-    keyword: 'Google Keep',
-    url: 'https://keep.google.com/#search/text='
-  }, {
-    keyword: 'Google Photos',
-    url: 'https://photos.google.com/search/'
-  }, {
-    keyword: 'Google Drive',
-    url: 'https://drive.google.com/drive/u/0/search?q='
-  }, {
-    keyword: 'Dropbox',
-    url: 'https://www.dropbox.com/search/personal?query_unnormalized='
-  }, {
-    keyword: 'Google',
-    url: 'https://google.com/search?q='
-  }, {
-    keyword: ['Wikipedia', 'wiki'],
-    url: 'https://en.wikipedia.org/w/index.php?search='
-  }, {
-    keyword: 'Amazon',
-    url: 'http://www.amazon.com/s/?field-keywords='
-  }, {
-    keyword: 'DuckDuckGo',
-    url: 'https://duckduckgo.com/?q='
-  }, {
-    keyword: 'Pinterest',
-    url: 'https://www.pinterest.com/search/?q='
-  }, {
-    keyword: 'ebay',
-    url: 'http://m.ebay.com/sch/i.html?_nkw='
-  }, {
-    keyword: 'imdb',
-    url: 'http://www.imdb.com/find?ref_=nv_sr_fn&s=all&q='
-  }, {
-    keyword: 'Stackoverflow',
-    url: defaultBehavior.url + 'site:stackoverflow.com+'
-  }];
-
-  var precursors = [
-    'on',
-    'on my',
-    'in',
-    'in my',
-    'from',
-    'from my',
-    "'",
-    "'s"
+  // Data
+  let foodMenu = JSON.parse(localStorage.getItem('foodMenu')) || [
+    { id: 1, name: '🍕 Pizza', desc: 'Cheese pizza', price: 12.99 },
+    { id: 2, name: '🍔 Burger', desc: 'Juicy burger', price: 10.99 },
+    { id: 3, name: '🍜 Pasta', desc: 'Italian pasta', price: 13.99 }
   ];
-
-  var worthlessPrefixes = [
-    "what's the",
-    "what is the",
-    "find",
-    "show",
-    "i want to",
-    "let me",
-    "show me",
-    "search for",
-    "look up",
-    "look for",
-    "search"
-  ];
+  let cart = JSON.parse(localStorage.getItem('cart')) || [];
+  let orders = JSON.parse(localStorage.getItem('orders')) || [];
+  let isAdmin = false;
   
-  var final_transcript = '';
-  var recognizing = false;
-  var cancel = false;
-
-  if (!('webkitSpeechRecognition' in window)) {
-    unsupported();
-  } else {
-    var recognition = new webkitSpeechRecognition();
-    recognition.interimResults = true;
-    recognition.continuous = true;
-    recognition.onstart = function() {}
-    recognition.onresult = function(e) {
-      var interim_transcript = '';
-
-      for (var i = e.resultIndex; i < e.results.length; ++i) {
-        if (e.results[i].isFinal) {
-          final_transcript = final_transcript + e.results[i][0].transcript;
+  // DOM selectors
+  const intro = $('#introduction');
+  const main = $('#mainContent');
+  const adminPanel = $('#adminPanel');
+  const cards = $('#cards');
+  const cartBadge = $('#cartCount');
+  const cartItems = $('#cartItems');
+  const cartEmpty = $('#cartEmpty');
+  const cartTotal = $('#cartTotal');
+  const voiceStart = $('#voiceStartBtn');
+  const voiceStatus = $('#voiceStatus');
+  const finalSpan = $('#final_span');
+  const interimSpan = $('#interim_span');
+  
+  // Admin elements
+  const adminCreateBtn = $('#adminCreateFood');
+  const adminLogoutBtn = $('#adminLogout');
+  const adminLoginBtn = $('#adminLoginBtn');
+  const adminMenuList = $('#adminMenuList');
+  const adminOrdersList = $('#adminOrdersList');
+  
+  // Voice Recognition
+  let recognition;
+  let finalTranscript = '';
+  
+  function initVoice() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      voiceStatus.text('⚠️ Voice not supported in this browser');
+      voiceStart.prop('disabled', true);
+      console.error('Speech Recognition API not available');
+      return;
+    }
+    
+    try {
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-GB';
+      console.log('✓ Speech recognition initialized successfully');
+    } catch (e) {
+      console.error('Error initializing speech recognition:', e);
+      voiceStatus.text('⚠️ Error initializing voice');
+      voiceStart.prop('disabled', true);
+      return;
+    }
+    
+    recognition.onstart = function() {
+      voiceStatus.text('🎤 Listening...');
+      finalSpan.text('');
+      interimSpan.text('');
+    };
+    
+    recognition.onresult = function(event) {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
         } else {
-          interim_transcript = interim_transcript + e.results[i][0].transcript;
+          interim += transcript;
         }
       }
-      final_transcript = capitalize(final_transcript);
-      $('#final_span').empty().html(linebreak(final_transcript));
-      $('#interim_span').empty().html(linebreak(interim_transcript));
+      finalSpan.text(finalTranscript.trim());
+      interimSpan.text(interim);
+    };
+    
+    recognition.onend = function() {
+      voiceStatus.text('✓ Done listening');
+      if (finalTranscript.trim()) {
+        processVoiceCommand(finalTranscript);
+      }
+      finalTranscript = '';
+    };
+    
+    recognition.onerror = function(event) {
+      voiceStatus.text('❌ Error: ' + event.error);
     };
   }
-  recognition.onerror = function(e) {}
-
-  function startButton(event) {
-    final_transcript = '';
-    //recognition.lang = select_dialect.value;
-    recognition.start();
-  }
-
-  function unsupported() {
-    console.log('Webkit speech api not supported in your browser');
-  }
-
-  // Main start event
-  $('#button').on('mousedown touchstart', function() {
-    if (cancel) {
-      TweenMax.killAll();
-      reset();
+  
+  function processVoiceCommand(text) {
+    text = text.toLowerCase().trim();
+    console.log('Processing voice command:', text);
+    
+    if (text.includes('add')) {
+      console.log('User said "add" - looking for food items');
+      let foundFood = null;
+      
+      // Try exact word match with food names
+      for (let food of foodMenu) {
+        const foodWords = food.name.toLowerCase().split(' ');
+        for (let word of foodWords) {
+          if (word.length > 2 && text.includes(word)) {
+            foundFood = food;
+            console.log('Matched food:', food.name);
+            break;
+          }
+        }
+        if (foundFood) break;
+      }
+      
+      if (foundFood) {
+        addToCart(foundFood);
+        finalSpan.text('✓ Added ' + foundFood.name + ' to cart!');
+        console.log('Added to cart:', foundFood.name);
+      } else {
+        finalSpan.text('❌ Could not find that item. Try: pizza, burger, or pasta');
+        console.log('No matching food found in:', foodMenu.map(f => f.name));
+      }
+    } else if (text.includes('show') && text.includes('cart')) {
+      new bootstrap.Modal(document.getElementById('modalCart')).show();
+      finalSpan.text('📭 Opening cart...');
+    } else if (text.includes('cart')) {
+      new bootstrap.Modal(document.getElementById('modalCart')).show();
+      finalSpan.text('📭 Opening cart...');
+    } else if (text.includes('menu')) {
+      finalSpan.text('📋 Here is our menu');
     } else {
-      startRecog();
+      finalSpan.text('⚠️ Command not recognized. Try: "add pizza", "show cart", or "show menu"');
+      console.log('Unrecognized command:', text);
+    }
+  }
+  
+  // Admin Login
+  adminLoginBtn.click(function() {
+    const username = $('#adminUsername').val();
+    const password = $('#adminPassword').val();
+    
+    if (username === 'admin' && password === 'password') {
+      isAdmin = true;
+      intro.hide();
+      adminPanel.show();
+      main.hide();
+      bootstrap.Modal.getInstance(document.getElementById('modalAdminLogin')).hide();
+      renderAdminDashboard();
+      alert('✓ Admin login successful!');
+    } else {
+      alert('❌ Invalid credentials');
     }
   });
-
-  function startRecog() {
-    if (!recognizing) {
+  
+  // Admin Logout
+  adminLogoutBtn.click(function() {
+    isAdmin = false;
+    adminPanel.hide();
+    intro.show();
+    $('#fixedAdminButton').show();
+    $('#adminUsername').val('');
+    $('#adminPassword').val('');
+  });
+  
+  // Admin Create Food
+  adminCreateBtn.click(function() {
+    const name = $('#adminFoodName').val().trim();
+    const desc = $('#adminFoodDesc').val().trim();
+    const price = $('#adminFoodPrice').val().trim();
+    
+    if (!name || !price) {
+      alert('Please fill in all required fields');
+      return;
+    }
+    
+    const newFood = {
+      id: Math.max(...foodMenu.map(f => f.id), 0) + 1,
+      name: name,
+      desc: desc || 'Delicious food',
+      price: parseFloat(price)
+    };
+    
+    foodMenu.push(newFood);
+    localStorage.setItem('foodMenu', JSON.stringify(foodMenu));
+    $('#adminFormFood')[0].reset();
+    renderAdminDashboard();
+    alert('✓ Food item created!');
+  });
+  
+  // Render Admin Dashboard
+  function renderAdminDashboard() {
+    // Food menu list
+    adminMenuList.empty();
+    foodMenu.forEach(food => {
+      const item = `
+        <div class="card mb-2 bg-dark-2">
+          <div class="card-body p-2">
+            <div class="row align-items-center">
+              <div class="col-7">
+                <h6 class="mb-0">${food.name}</h6>
+                <small class="text-muted">£${food.price.toFixed(2)}</small>
+              </div>
+              <div class="col-5 text-end">
+                <button class="btn btn-xs btn-danger delete-food" data-id="${food.id}">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      adminMenuList.append(item);
+    });
+    
+    $('.delete-food').click(function() {
+      const id = $(this).data('id');
+      if (confirm('Delete this item?')) {
+        foodMenu = foodMenu.filter(f => f.id != id);
+        localStorage.setItem('foodMenu', JSON.stringify(foodMenu));
+        renderAdminDashboard();
+        renderMenu();
+      }
+    });
+    
+    // Orders list
+    renderOrdersList();
+  }
+  
+  function renderOrdersList() {
+    adminOrdersList.empty();
+    if (orders.length === 0) {
+      adminOrdersList.html('<p class="text-muted">No orders yet</p>');
+      return;
+    }
+    
+    orders.forEach((order, idx) => {
+      const itemsHtml = order.items.map(item => 
+        `${item.name} x${item.qty} (£${(item.price * item.qty).toFixed(2)})`
+      ).join('<br>');
+      
+      const orderHtml = `
+        <div class="card mb-2 bg-dark-2">
+          <div class="card-body p-2">
+            <div><strong>Order #${idx + 1}</strong></div>
+            <small class="text-muted">${new Date(order.date).toLocaleString()}</small>
+            <div class="mt-1">${itemsHtml}</div>
+            <div class="mt-1"><strong>Total: £${order.total.toFixed(2)}</strong></div>
+          </div>
+        </div>
+      `;
+      adminOrdersList.append(orderHtml);
+    });
+  }
+  
+  // Add to cart
+  function addToCart(food) {
+    let item = cart.find(i => i.id == food.id);
+    if (item) {
+      item.qty++;
+    } else {
+      cart.push({...food, qty: 1});
+    }
+    saveCart();
+    updateCart();
+  }
+  
+  // Save cart to localStorage
+  function saveCart() {
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }
+  
+  // Update cart display
+  function updateCart() {
+    const total = cart.reduce((s, i) => s + i.qty, 0);
+    cartBadge.text(total);
+    
+    if (cart.length === 0) {
+      cartItems.empty();
+      cartEmpty.show();
+      cartTotal.text('£0.00');
+    } else {
+      cartEmpty.hide();
+      cartItems.empty();
+      
+      cart.forEach(item => {
+        const itemTotal = (item.price * item.qty).toFixed(2);
+        const row = `
+          <div class="card mb-2">
+            <div class="card-body p-2">
+              <div class="row align-items-center">
+                <div class="col-5">
+                  <h6 class="mb-0">${item.name}</h6>
+                  <small>£${item.price.toFixed(2)}</small>
+                </div>
+                <div class="col-4">
+                  <button class="btn btn-xs btn-outline qty-minus" data-id="${item.id}">−</button>
+                  <span class="mx-1">${item.qty}</span>
+                  <button class="btn btn-xs btn-outline qty-plus" data-id="${item.id}">+</button>
+                </div>
+                <div class="col-2">£${itemTotal}</div>
+                <div class="col-1">
+                  <button class="btn btn-xs btn-danger remove" data-id="${item.id}">✕</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        cartItems.append(row);
+      });
+      
+      $('.qty-plus').click(function() {
+        const id = $(this).data('id');
+        const item = cart.find(i => i.id == id);
+        if (item) item.qty++;
+        saveCart();
+        updateCart();
+      });
+      
+      $('.qty-minus').click(function() {
+        const id = $(this).data('id');
+        const item = cart.find(i => i.id == id);
+        if (item) {
+          item.qty--;
+          if (item.qty <= 0) cart = cart.filter(i => i.id != id);
+        }
+        saveCart();
+        updateCart();
+      });
+      
+      $('.remove').click(function() {
+        const id = $(this).data('id');
+        cart = cart.filter(i => i.id != id);
+        saveCart();
+        updateCart();
+      });
+      
+      const sum = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+      cartTotal.text('£' + sum.toFixed(2));
+    }
+  }
+  
+  
+  // Render menu
+  function renderMenu() {
+    cards.empty();
+    foodMenu.forEach(food => {
+      const card = `
+        <div class="col">
+          <div class="card food-card h-100">
+            <div class="card-body text-center">
+              <div style="font-size: 2rem; margin-bottom: 10px;">${food.name.split(' ')[0]}</div>
+              <h5 class="card-title">${food.name}</h5>
+              <p class="card-text text-muted">${food.desc}</p>
+              <h6 class="text-warning">£${food.price.toFixed(2)}</h6>
+            </div>
+            <div class="card-footer bg-transparent">
+              <button class="btn btn-sm btn-success w-100 add-btn" data-id="${food.id}">Add to Cart</button>
+            </div>
+          </div>
+        </div>
+      `;
+      cards.append(card);
+    });
+    
+    $('.add-btn').click(function() {
+      const id = $(this).data('id');
+      const food = foodMenu.find(f => f.id == id);
+      addToCart(food);
+    });
+  }
+  
+  // Show main content
+  $('#introButton').click(function() {
+    intro.hide();
+    main.fadeIn();
+    $('#fixedAdminButton').hide();
+    renderMenu();
+  });
+  
+  voiceStart.click(function() {
+    if (recognition) {
+      finalTranscript = '';
       recognition.start();
-      final_transcript = '';
-      $('#final_span').empty();
-      $('#interim_span').empty();
-      $(this).text('done');
-      recognizing = true;
     }
-  };
-
-  $(document).on('touchend mouseup', function() {
-    endRecog();
-  })
-
-  function endRecog() {
-    if (recognizing) {
-      recognizing = false;
-      recognition.stop();
-    }
-  }
-
-  recognition.onend = function() {
-    var string = final_transcript.toLowerCase(); 
-    if (string.trim() != '') {
-      recognizing = false;
-      cancel = true;
-      var counter = {
-          t: 0
-        },
-        border = '2px solid white',
-        loading = $('<div class="element"><div class="loading"></div><div class="slice"></div></div>'),
-        fill = $('<div class="loading ring">')
-      $('#button #contents').append(loading).append(fill);
-      $('#button').addClass('cancel');
-      TweenMax.to(counter, 2, {
-        t: 100,
-        ease: Linear.easeNone,
-        onUpdate: function() {
-          TweenMax.set($('#button .element .loading'), {
-            rotation: (counter.t * 3.6) - 45
-          });
-          if (counter.t >= 25) {
-            $('#button > #contents > .loading.ring').css('border-top', border);
-          };
-          if (counter.t >= 50) {
-            $('#button > #contents > .loading.ring').css('border-right', border);
-            $('#button .element .slice').remove();
-          }
-          if (counter.t >= 75) {
-            $('#button > #contents > .loading.ring').css('border-bottom', border);
-          }
-        },
-        onComplete: function() {
-          process(string);
-          reset();
-        }
-      });
-    } else {
-      showTip();
-    }
-  }
-
-  function process(string) {
-    string = string.toLowerCase();
-    success = false;
-    $.each(keywords, function() {
-      if (Array.isArray(this.keyword)) {
-        var self = this;
-        $(this.keyword).each(function() {
-          var keyword = this.toLowerCase();
-          if (String(string).indexOf(keyword) > -1) {
-            //string ops
-            console.log(string, self);
-            var passIt = self;
-            passIt.keyword = keyword;
-            string = parseString(string, self);
-            success = true;
-            return false;
-          }
-        });
-      } else {
-        var keyword = this.keyword;
-        keyword = keyword.toLowerCase();
-        if (String(string).indexOf(keyword) > -1) {
-          //string ops
-          string = parseString(string, this);
-          success = true;
-          return false;
-        }
-      }
-    });
-    if (!success) {
-      noKeyword(string);
-    }
-  }
-
-  function noKeyword(string) {
-    // "Go to"/"Open" command
-    if (string.indexOf('go to') == 0) {
-      string = string.substring('go to'.length + 1);
-      getThat(defaultBehavior, string.trim(), 'firstHit')
-    } else if (string.indexOf('goto') == 0) {
-      string = string.substring('goto'.length + 1);
-      getThat(defaultBehavior, string.trim(), 'firstHit')
-    } else if (string.indexOf('open') == 0) {
-      string = string.substring('open'.length + 1);
-      openInNewTab(string);
-      getThat(defaultBehavior, string.trim(), 'firstHit')
-    } else {
-      $(worthlessPrefixes).each(function() {
-        if (string.indexOf(this.toLowerCase()) == 0) {
-          string = string.substring(this.length + 1);
-          return false;
-        }
-      });
-      string = string.replace('weather like', 'weather');
-      getThat(defaultBehavior, string.trim());
-    }
-  }
-
-  function parseString(string, keyword) {
-    var found = false;
-    // strip out useless human context
-    $(worthlessPrefixes).each(function() {
-      if (string.indexOf(this) == 0) {
-        string = string.substring(this.length + 1);
-        return false;
-      }
-    });
-    if (string.trim() == keyword.keyword.toLowerCase()) {
-      console.log('no string')
-        // There is no string here, so go to the root domain
-      var pathArray = keyword.url.split('/'),
-        protocol = pathArray[0],
-        host = pathArray[2],
-        url = protocol + '//' + host;
-      newKeyword = {
-        url: url
-      };
-      getThat(newKeyword, '');
-    } else {
-      // There is a string here, so query it
-
-      $(precursors).each(function() {
-        var onKeyword = String(this) + ' ' + keyword.keyword.toLowerCase();
-        if (string.indexOf(onKeyword) > -1 && string.indexOf(onKeyword) == string.length - onKeyword.length) {
-          string = string.substring(0, string.length - onKeyword.length).trim();
-          found = true;
-          return false
-        }
-      });
-
-      var searchXFor = keyword.keyword.toLowerCase() + ' for';
-      if (string.indexOf(searchXFor) == 0 && !found) {
-        string = string.substring(searchXFor.length + 1);
-      }
-
-      if (!found) {
-        string = string.replace(keyword.keyword.toLowerCase(), '')
-      }
-      getThat(keyword, string.trim());
-    }
-  }
-
-  function getThat(command, query, firstHit) {
-    var suffix = '';
-    if (command.suffix) {
-      suffix = command.suffix
-    }
-    if (firstHit) {
-      openInNewTab(defaultBehavior.firstHit + encodeURIComponent(query) + suffix);
-    } else {
-      openInNewTab(command.url + encodeURIComponent(query) + suffix);
-    }
-  }
-
-  function openInNewTab(url) {
-    var win = window.open(url, '_blank');
-    win.focus();
-  }
-
-  function reset() {
-    TweenMax.set($("#button .loading"), {
-      clearProps: "all"
-    });
-    $('#button').removeClass('cancel');
-    $('#button #contents').empty();
-    cancel = false;
-    final_transcript = '';
-    $('#final_span').text('');
-  }
-
-  function showTip() {
-    reset();
-    $('#tip').addClass('show');
-    if (tip) {
-      window.clearTimeout(tip);
-    }
-    tip = setTimeout(function() {
-      $('#tip').removeClass('show');
-    }, 3000);
-    console.log('press and hold to speak');
-
-  }
-
-  /// ##### VISUALIZATION STUFF #####
-
-  var liveSource;
-  var analyser;
-  var frequencyData;
-  var scaling = 1.5;
-
-  function update() {
-      requestAnimationFrame(update);
-
-      if (recognizing) {
-        analyser.getByteFrequencyData(frequencyData);
-        TweenMax.set($('.visual'), {
-            autoAlpha: 0.75
-          })
-          /*
-              TweenMax.set($('#viz1'), {
-                scaleX: (((frequencyData[8] + 1) / 95) / scaling),
-                scaleY: (((frequencyData[23] + 1) / 110) / scaling)
-              })
-              TweenMax.set($('#viz2'), {
-                scaleX: (((frequencyData[10] + 1) / 100) / scaling),
-                scaleY: (((frequencyData[21] + 1) / 105) / scaling)
-              })
-              TweenMax.set($('#viz3'), {
-                scaleX: (((frequencyData[12] + 1) / 110) / scaling),
-                scaleY: (((frequencyData[19] + 1) / 95) / scaling)
-              })
-          */
-
-        TweenMax.set($('#viz1'), {
-          scale: (((frequencyData[8] + 1) / 100) / scaling)
-        });
-        TweenMax.set($('#viz2'), {
-          scale: (((frequencyData[15] + 1) / 100) / scaling)
-        });
-        TweenMax.set($('#viz3'), {
-          scale: (((frequencyData[21] + 1) / 100) / scaling)
-        });
-      } else {
-        TweenMax.set($('.visual'), {
-          autoAlpha: 0
-        })
-      }
-    }
-    // creates an audiocontext and hooks up the audio input
-  var context = new AudioContext();
-  navigator.webkitGetUserMedia({
-    audio: true
-  }, function(stream) {
-    console.log("Connected live audio input");
-    if (!analyser) {
-      liveSource = context.createMediaStreamSource(stream);
-      // Create the analyser
-      analyser = context.createAnalyser();
-      analyser.smoothingTimeConstant = 0.3;
-      analyser.fftSize = 64;
-      frequencyData = new Uint8Array(analyser.frequencyBinCount);
-      liveSource.connect(analyser);
-    };
-    update();
-  }, function() {
-    console.log('Error connecting to audio')
   });
-
+  
+  // Checkout
+  $('#btnCheckout').click(function() {
+    if (cart.length === 0) {
+      alert('Your cart is empty');
+      return;
+    }
+    const total = parseFloat(cartTotal.text().replace('£', ''));
+    const order = {
+      items: [...cart],
+      total: total,
+      date: new Date().toISOString()
+    };
+    
+    orders.push(order);
+    localStorage.setItem('orders', JSON.stringify(orders));
+    
+    alert('Thank you for your order! Total: £' + total.toFixed(2));
+    cart = [];
+    saveCart();
+    updateCart();
+  });
+  
+  // Init
+  initVoice();
+  updateCart();
 });
-
-/// ##### BASIC UTILS #####
-
-function capitalize(string) {
-  return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
-function linebreak(s) {
-  var two_line = /\n\n/g;
-  var one_line = /\n/g;
-  return s.replace(two_line, '<p></p>').replace(one_line, '<br>');
-}
