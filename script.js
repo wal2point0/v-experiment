@@ -44,11 +44,16 @@ $(function() {
       return;
     }
     
+    const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|BlackBerry/i.test(navigator.userAgent);
     try {
       recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = true;
       recognition.lang = 'en-GB';
+      recognition.maxAlternatives = 5;
+      recognition.continuous = true; // keep listening for better mobile recognition
+      recognition.interimResults = false; // use final transcripts to reduce noise on mobile
+      if (isMobile) {
+        voiceStatus.text('🎤 Mobile mode: speak clearly and pause after phrase');
+      }
       console.log('✓ Speech recognition initialized successfully');
     } catch (e) {
       console.error('Error initializing speech recognition:', e);
