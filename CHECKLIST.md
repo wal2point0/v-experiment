@@ -40,6 +40,36 @@ Use this checklist to track readiness from prototype to client handoff.
 - [ ] Add 30+ menu items and place 20+ orders without storage crashes
 - [ ] Verify refresh/reopen behavior keeps data consistent
 
+### UI Smoke Test (Basic Pass/Fail)
+
+Run details:
+
+- Date: __________
+- Tester: __________
+- Browser: __________
+- Device/Viewport: __________
+
+Mark one result per row:
+
+| # | UI check | Expected result | Pass | Fail |
+| --- | --- | --- | --- | --- |
+| 1 | Landing page load | Page renders with no broken layout | [ ] | [ ] |
+| 2 | Intro readability (desktop/mobile) | Heading and intro text are readable and balanced | [ ] | [ ] |
+| 3 | Get Started button | Button is visible, clickable, and enters main app view | [ ] | [ ] |
+| 4 | Navbar responsive behavior | Desktop navbar is aligned; mobile toggle opens/closes correctly | [ ] | [ ] |
+| 5 | Help modal open/close | Opens from Help button and closes via Close, X, and backdrop click | [ ] | [ ] |
+| 6 | Cart modal empty state | Cart opens and empty-state message appears when cart is empty | [ ] | [ ] |
+| 7 | Cart interactions | Add, increase, decrease, and remove all update badge and totals correctly | [ ] | [ ] |
+| 8 | Voice control panel | Start/Stop buttons and status text are visible and usable | [ ] | [ ] |
+| 9 | Help hint text style | "Need help? Tap Help in the top menu." is subtle golden-yellow and readable | [ ] | [ ] |
+| 10 | Landing/admin ambience | Lanterns and light particles render without blocking controls | [ ] | [ ] |
+| 11 | Admin login fields | Username/password fields are empty by default | [ ] | [ ] |
+| 12 | Favicon coverage | Favicon appears on storefront and admin pages | [ ] | [ ] |
+
+Pass target: at least 11/12 checks pass (>= 90%).
+
+Score this run: Passed __ / 12, Failed __ / 12.
+
 ### Voice Test Script (Compact Pass/Fail)
 
 Mark one result per row:
