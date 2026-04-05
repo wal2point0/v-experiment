@@ -15,6 +15,10 @@ $(function() {
   const adminCreateBtn = $('#adminCreateFood');
   const adminMenuList = $('#adminMenuList');
   const adminOrdersList = $('#adminOrdersList');
+  const MAX_IMAGE_BYTES = 1024 * 1024; // 1 MB
+  const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8 MB hard cap before processing
+  const MAX_IMAGE_DIMENSION = 800;
+  const JPEG_QUALITY = 0.8;
 
   // --- Session expiry helpers ---
   function setAdminSession() {
@@ -47,8 +51,11 @@ $(function() {
         <div class="card mb-2 bg-dark-2">
           <div class="card-body p-2">
             <div class="row align-items-center">
-              <div class="col-7">
-                <h6 class="mb-0">${food.name}</h6>
+              <div class="col-3">
+                ${food.image ? `<img src="${food.image}" alt="${food.name}" style="width:140px;height:140px;object-fit:cover;object-position:center;display:block;margin:auto;border-radius:10px;">` : ''}
+              </div>
+              <div class="col-4">
+                <h6 class="mb-0">#${food.number} ${food.name}</h6>
                 <small class="text-muted">£${food.price.toFixed(2)}</small>
               </div>
               <div class="col-5 text-end">
@@ -104,30 +111,117 @@ $(function() {
     window.location.href = 'admin-login.html';
   });
 
-  adminCreateBtn.click(function() {
+  function dataUrlSizeBytes(dataUrl) {
+    const base64 = dataUrl.split(',')[1] || '';
+    return Math.ceil((base64.length * 3) / 4);
+  }
+
+  function resizeAndCompressImage(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Could not read image file.'));
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Could not decode image file.'));
+        img.onload = function() {
+          const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(img.width, img.height));
+          const width = Math.max(1, Math.round(img.width * scale));
+          const height = Math.max(1, Math.round(img.height * scale));
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Could not process image.'));
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+          resolve(compressedDataUrl);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  adminCreateBtn.click(async function() {
     const name = $('#adminFoodName').val().trim();
     const desc = $('#adminFoodDesc').val().trim();
     const price = $('#adminFoodPrice').val().trim();
-
+    const imageInput = $('#adminFoodImage')[0];
     if (!name || !price) {
       alert('Please fill in all required fields');
       return;
     }
+    let imageData = null;
+    if (imageInput && imageInput.files && imageInput.files[0]) {
+      const imageFile = imageInput.files[0];
+      if (imageFile.size > MAX_UPLOAD_BYTES) {
+        alert('Image is too large. Please choose an image under 8 MB.');
+        return;
+      }
+
+      try {
+        imageData = await resizeAndCompressImage(imageFile);
+      } catch (err) {
+        alert('Could not process image. Please try a different file.');
+        return;
+      }
+
+      if (dataUrlSizeBytes(imageData) > MAX_IMAGE_BYTES) {
+        alert('Processed image is still too large. Please choose a smaller image.');
+        return;
+      }
+    }
 
     const newFood = {
       id: Math.max(...foodMenu.map(f => f.id), 0) + 1,
+      number: Math.max(...foodMenu.map(f => f.number || 0), 0) + 1,
       name: name,
       desc: desc || 'Delicious food',
       price: parseFloat(price)
     };
 
+    if (imageData) {
+      newFood.image = imageData;
+    }
+
     foodMenu.push(newFood);
-    localStorage.setItem('foodMenu', JSON.stringify(foodMenu));
+    try {
+      localStorage.setItem('foodMenu', JSON.stringify(foodMenu));
+    } catch (e) {
+      foodMenu.pop();
+      if (e.name === 'QuotaExceededError') {
+        alert('Storage is full. Please remove some existing menu images.');
+        return;
+      }
+      throw e;
+    }
+
     $('#adminFormFood')[0].reset();
     renderAdminDashboard();
     alert('✓ Food item created!');
   });
 
+  // Ensure each food item has a unique number
+  function assignFoodNumbers() {
+    let nextNum = 1;
+    foodMenu.forEach(food => {
+      if (!food.number) {
+        // Find next unused number
+        while (foodMenu.some(f => f.number === nextNum)) nextNum++;
+        food.number = nextNum;
+        nextNum++;
+      }
+    });
+    localStorage.setItem('foodMenu', JSON.stringify(foodMenu));
+  }
+
+  assignFoodNumbers();
   setAdminSession();
   renderAdminDashboard();
 });

@@ -21,3 +21,6 @@ Voice Restaurant project with voice menu, cart, and admin management.
 - Admin session is stored in `sessionStorage.isAdminLoggedIn`.
 - `admin.js` contains admin dashboard functionality and guard logic.
 - Default admin credentials are hardcoded for demo only; in production use secure auth and encrypted storage.
+
+## Project checklist
+- See `CHECKLIST.md` for the practical launch and handoff checklist.

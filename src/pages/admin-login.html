@@ -4,30 +4,109 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Voice Restaurant Admin Login</title>
+    <link rel="icon" type="image/png" href="../lantern.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="../css/style.css" rel="stylesheet">
   </head>
-  <body class="d-flex h-100 text-center" style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); color: rgba(255, 255, 255, 0.9);">
-    <div class="container py-4 d-flex flex-column justify-content-center align-items-center" style="min-height:100vh;">
-      <a href="../pages/index.html" class="btn btn-light position-absolute top-0 end-0 m-3">Back to Store</a>
-      <div class="card bg-dark border-warning w-100" style="max-width: 480px;">
-        <div class="card-body text-center">
-          <h1>Admin Dashboard</h1>
-          <h3 class="mb-3">🔐 Admin Login</h3>
-          <div class="mb-3 text-start">
-            <label class="form-label">Username</label>
-            <input id="adminUsername" type="text" class="form-control" placeholder="admin" value="admin" />
-          </div>
-          <div class="mb-3 text-start">
-            <label class="form-label">Password</label>
-            <input id="adminPassword" type="password" class="form-control" placeholder="password" value="password" />
-          </div>
-          <button id="adminLoginBtn" class="btn btn-primary w-100">Login</button>
-          <small class="text-muted d-block mt-2">Default: admin / password</small>
-        </div>
+  <body class="admin-login-page d-flex h-100 text-center">
+    <div class="d-flex w-100 h-100 p-3 mx-auto flex-column parent admin-login-shell">
+      <div class="admin-login-back-wrap">
+        <a href="../pages/index.html" class="chinese-start-button chinese-nav-button admin-login-back-btn" role="button">
+          <span class="chinese-start-button-text"><i class="bi bi-arrow-left-circle me-1"></i> Back to Store</span>
+          <span class="chinese-start-button-background-wrapper">
+            <span class="chinese-start-button-background"></span>
+          </span>
+          <span class="chinese-start-button-bottom-wrapper">
+            <span class="chinese-start-button-bottom"></span>
+          </span>
+        </a>
       </div>
-      <p class="text-muted mt-3">You will be redirected to the admin dashboard after login.</p>
+
+      <div id="introduction" class="admin-login-intro align-items-center justify-content-center my-auto">
+        <div class="landing-lanterns" aria-hidden="true">
+          <div class="lantern-box"><div class="lantern"><div class="lantern-line"></div><div class="lantern-main"><div class="lantern-rect"><div class="lantern-text">节</div></div></div><div class="lantern-tassel lantern-tassel-top"><div class="lantern-tassel-bottom"></div><div class="lantern-tassel-middle"></div></div></div></div>
+          <div class="lantern-box"><div class="lantern"><div class="lantern-line"></div><div class="lantern-main"><div class="lantern-rect"><div class="lantern-text">春</div></div></div><div class="lantern-tassel lantern-tassel-top"><div class="lantern-tassel-bottom"></div><div class="lantern-tassel-middle"></div></div></div></div>
+          <div class="lantern-box"><div class="lantern"><div class="lantern-line"></div><div class="lantern-main"><div class="lantern-rect"><div class="lantern-text">欢</div></div></div><div class="lantern-tassel lantern-tassel-top"><div class="lantern-tassel-bottom"></div><div class="lantern-tassel-middle"></div></div></div></div>
+          <div class="lantern-box"><div class="lantern"><div class="lantern-line"></div><div class="lantern-main"><div class="lantern-rect"><div class="lantern-text">庆</div></div></div><div class="lantern-tassel lantern-tassel-top"><div class="lantern-tassel-bottom"></div><div class="lantern-tassel-middle"></div></div></div></div>
+          <div class="lantern-box"><div class="lantern"><div class="lantern-line"></div><div class="lantern-main"><div class="lantern-rect"><div class="lantern-text">吉</div></div></div><div class="lantern-tassel lantern-tassel-top"><div class="lantern-tassel-bottom"></div><div class="lantern-tassel-middle"></div></div></div></div>
+          <div class="lantern-box"><div class="lantern"><div class="lantern-line"></div><div class="lantern-main"><div class="lantern-rect"><div class="lantern-text">祥</div></div></div><div class="lantern-tassel lantern-tassel-top"><div class="lantern-tassel-bottom"></div><div class="lantern-tassel-middle"></div></div></div></div>
+          <div class="lantern-box"><div class="lantern"><div class="lantern-line"></div><div class="lantern-main"><div class="lantern-rect"><div class="lantern-text">鸿</div></div></div><div class="lantern-tassel lantern-tassel-top"><div class="lantern-tassel-bottom"></div><div class="lantern-tassel-middle"></div></div></div></div>
+          <div class="lantern-box"><div class="lantern"><div class="lantern-line"></div><div class="lantern-main"><div class="lantern-rect"><div class="lantern-text">运</div></div></div><div class="lantern-tassel lantern-tassel-top"><div class="lantern-tassel-bottom"></div><div class="lantern-tassel-middle"></div></div></div></div>
+          <div class="lantern-box"><div class="lantern"><div class="lantern-line"></div><div class="lantern-main"><div class="lantern-rect"><div class="lantern-text">福</div></div></div><div class="lantern-tassel lantern-tassel-top"><div class="lantern-tassel-bottom"></div><div class="lantern-tassel-middle"></div></div></div></div>
+          <div class="lantern-box"><div class="lantern"><div class="lantern-line"></div><div class="lantern-main"><div class="lantern-rect"><div class="lantern-text">满</div></div></div><div class="lantern-tassel lantern-tassel-top"><div class="lantern-tassel-bottom"></div><div class="lantern-tassel-middle"></div></div></div></div>
+        </div>
+
+        <div class="lantern-light-particles" aria-hidden="true">
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+          <span class="light-particle"></span>
+        </div>
+
+        <h1>RED LANTERN ADMIN PORTAL</h1>
+
+        <div class="card admin-login-card w-100 mx-auto">
+          <div class="card-body text-center">
+            <h2 class="admin-login-title mb-3"><i class="bi bi-shield-lock-fill me-2"></i>Admin Login</h2>
+
+            <div class="mb-3 text-start">
+              <label class="form-label">Username</label>
+              <input id="adminUsername" type="text" class="form-control" placeholder="Username" />
+            </div>
+
+            <div class="mb-3 text-start">
+              <label class="form-label">Password</label>
+              <input id="adminPassword" type="password" class="form-control" placeholder="Password" />
+            </div>
+
+            <button id="adminLoginBtn" class="chinese-start-button admin-login-submit" type="button">
+              <span class="chinese-start-button-text"><i class="bi bi-door-open-fill me-1"></i>Login</span>
+              <span class="chinese-start-button-background-wrapper">
+                <span class="chinese-start-button-background"></span>
+              </span>
+              <span class="chinese-start-button-bottom-wrapper">
+                <span class="chinese-start-button-bottom"></span>
+              </span>
+            </button>
+
+          </div>
+        </div>
+
+        <p class="admin-login-note mt-3 mb-0">You will be redirected to the admin dashboard after login.</p>
+      </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -44,7 +123,7 @@
             sessionStorage.setItem('adminSessionExpiry', exp);
             window.location.href = 'admin-dashboard.html';
           } else {
-            alert('❌ Invalid credentials. Use admin / password');
+            alert('❌ Invalid credentials.');
           }
         });
       });

@@ -4,56 +4,92 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Voice Restaurant Admin Dashboard</title>
+    <link rel="icon" type="image/png" href="../lantern.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="../css/style.css" rel="stylesheet">
   </head>
-  <body class="d-flex h-100 text-center" style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); color: rgba(255, 255, 255, 0.9); overflow-y:auto;">
-    <div class="container py-4">
-      <a href="../pages/index.html" class="btn btn-light position-absolute top-0 end-0 m-3">Back to Store</a>
-      <div class="text-center mb-3">
-        <h1>Admin Dashboard</h1>
+  <body class="admin-dashboard-page d-flex h-100 text-center">
+    <div class="d-flex w-100 h-100 p-3 mx-auto flex-column parent admin-dashboard-shell">
+      <div class="admin-dashboard-back-wrap">
+        <a href="../pages/index.html" class="chinese-start-button chinese-nav-button admin-dashboard-back-btn" role="button">
+          <span class="chinese-start-button-text"><i class="bi bi-arrow-left-circle me-1"></i> Back to Store</span>
+          <span class="chinese-start-button-background-wrapper">
+            <span class="chinese-start-button-background"></span>
+          </span>
+          <span class="chinese-start-button-bottom-wrapper">
+            <span class="chinese-start-button-bottom"></span>
+          </span>
+        </a>
       </div>
 
-      <div id="adminPanel">
-        <div class="row mb-4">
-          <div class="col-12 d-flex justify-content-between align-items-center">
-            <h2>📊 Admin Panel</h2>
-            <button id="adminLogout" class="btn btn-warning">Logout</button>
-          </div>
+      <div class="container py-4 admin-dashboard-content">
+        <div class="text-center mb-3">
+          <h1 class="admin-dashboard-heading">RED LANTERN ADMIN DASHBOARD</h1>
         </div>
 
-        <div class="row mb-4">
-          <div class="col-md-6 mb-3">
-            <div class="card bg-dark border-warning">
-              <div class="card-header">➕ Create Food Item</div>
-              <div class="card-body">
-                <div class="mb-2">
-                  <input id="adminFoodName" type="text" class="form-control" placeholder="Food name" required />
+        <div id="adminPanel">
+          <div class="row mb-4">
+            <div class="col-12 d-flex justify-content-between align-items-center admin-dashboard-toolbar">
+              <h2 class="admin-dashboard-subheading"><i class="bi bi-graph-up-arrow me-2"></i>Admin Panel</h2>
+              <button id="adminLogout" class="chinese-start-button chinese-nav-button admin-dashboard-logout" type="button">
+                <span class="chinese-start-button-text"><i class="bi bi-box-arrow-right me-1"></i>Logout</span>
+                <span class="chinese-start-button-background-wrapper">
+                  <span class="chinese-start-button-background"></span>
+                </span>
+                <span class="chinese-start-button-bottom-wrapper">
+                  <span class="chinese-start-button-bottom"></span>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-md-6 mb-3">
+              <div class="card admin-dashboard-card">
+                <div class="card-header"><i class="bi bi-plus-circle-fill me-2"></i>Create Food Item</div>
+                <div class="card-body">
+                  <form id="adminFormFood">
+                    <div class="mb-2">
+                      <input id="adminFoodName" type="text" class="form-control" placeholder="Food name" required />
+                    </div>
+                    <div class="mb-2">
+                      <input id="adminFoodDesc" type="text" class="form-control" placeholder="Description" />
+                    </div>
+                    <div class="mb-2">
+                      <input id="adminFoodPrice" type="number" class="form-control" placeholder="Price" step="0.01" required />
+                    </div>
+                    <div class="mb-3">
+                      <input id="adminFoodImage" type="file" class="form-control" accept="image/*" />
+                    </div>
+                    <button id="adminCreateFood" type="button" class="chinese-start-button admin-dashboard-create-btn w-100">
+                      <span class="chinese-start-button-text"><i class="bi bi-check2-circle me-1"></i>Create Item</span>
+                      <span class="chinese-start-button-background-wrapper">
+                        <span class="chinese-start-button-background"></span>
+                      </span>
+                      <span class="chinese-start-button-bottom-wrapper">
+                        <span class="chinese-start-button-bottom"></span>
+                      </span>
+                    </button>
+                  </form>
                 </div>
-                <div class="mb-2">
-                  <input id="adminFoodDesc" type="text" class="form-control" placeholder="Description" />
-                </div>
-                <div class="mb-2">
-                  <input id="adminFoodPrice" type="number" class="form-control" placeholder="Price" step="0.01" required />
-                </div>
-                <button id="adminCreateFood" class="btn btn-success w-100">Create Item</button>
+              </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <div class="card admin-dashboard-card">
+                <div class="card-header"><i class="bi bi-list-ul me-2"></i>Food Menu</div>
+                <div class="card-body" id="adminMenuList" style="max-height:300px; overflow-y:auto;"></div>
               </div>
             </div>
           </div>
-          <div class="col-md-6 mb-3">
-            <div class="card bg-dark border-warning">
-              <div class="card-header">📋 Food Menu</div>
-              <div class="card-body" id="adminMenuList" style="max-height:300px; overflow-y:auto;"></div>
-            </div>
-          </div>
-        </div>
 
-        <div class="row">
-          <div class="col-12">
-            <div class="card bg-dark border-warning">
-              <div class="card-header">📦 All Orders</div>
-              <div class="card-body" id="adminOrdersList" style="max-height:400px; overflow-y:auto;"></div>
+          <div class="row">
+            <div class="col-12">
+              <div class="card admin-dashboard-card">
+                <div class="card-header"><i class="bi bi-box-seam me-2"></i>All Orders</div>
+                <div class="card-body" id="adminOrdersList" style="max-height:400px; overflow-y:auto;"></div>
+              </div>
             </div>
           </div>
         </div>
