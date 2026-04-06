@@ -42,9 +42,9 @@ $(function() {
   const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|BlackBerry/i.test(navigator.userAgent);
   const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
   const safariAssistantAudio = {
-    intro: new Audio('../introSpeech.mp3'),
-    anythingElse: new Audio('../anythingElse.mp3'),
-    cart: new Audio('../cartSpeech.mp3')
+    intro: new Audio('../assets/audio/introSpeech.mp3'),
+    anythingElse: new Audio('../assets/audio/anythingElse.mp3'),
+    cart: new Audio('../assets/audio/cartSpeech.mp3')
   };
   
   // Voice Recognition

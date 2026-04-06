@@ -9,6 +9,7 @@ Voice Restaurant project with voice menu, cart, and admin management.
 - `src/pages/` HTML pages
 - `src/js/` JavaScript files (`script.js`, `admin.js`, `data-store.js`, `backend-config.js`)
 - `src/css/` Stylesheet (`style.css`)
+- `src/assets/` static assets (`audio/`, `fonts/`, `images/`)
 
 ## Shared data across browsers (optional backend)
 

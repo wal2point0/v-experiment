@@ -1,7 +1,7 @@
 /* ===== GENERAL STYLES ===== */
 @font-face {
   font-family: 'ChineseChicken';
-  src: url('../Chinese Chicken.ttf') format('truetype');
+  src: url('../assets/fonts/Chinese Chicken.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
