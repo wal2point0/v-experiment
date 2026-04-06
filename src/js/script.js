@@ -1,13 +1,25 @@
 // Voice Restaurant App
 $(function() {
+  const store = window.RedLanternStore;
+
   // Data
-  let foodMenu = JSON.parse(localStorage.getItem('foodMenu')) || [
+  let foodMenu = (store && store.getCachedMenu()) || [
     { id: 1, name: '🍕 Pizza', desc: 'Cheese pizza', price: 12.99, number: 1 },
     { id: 2, name: '🍔 Burger', desc: 'Juicy burger', price: 10.99, number: 2 },
     { id: 3, name: '🍜 Pasta', desc: 'Italian pasta', price: 13.99, number: 3 }
   ];
   let cart = JSON.parse(localStorage.getItem('cart')) || [];
-  let orders = JSON.parse(localStorage.getItem('orders')) || [];
+  let orders = (store && store.getCachedOrders()) || JSON.parse(localStorage.getItem('orders')) || [];
+
+  async function refreshMenuData() {
+    if (!store) return;
+    foodMenu = await store.getMenu();
+  }
+
+  async function refreshOrdersData() {
+    if (!store) return;
+    orders = await store.getOrders();
+  }
   
   // DOM selectors
   const intro = $('#introduction');
@@ -809,10 +821,11 @@ $(function() {
   }
   
   // Show main content
-  $('#introButton').click(function() {
+  $('#introButton').click(async function() {
     speakAssistantIntro();
     intro.hide();
     main.fadeIn();
+    await refreshMenuData();
     renderMenu();
   });
   
@@ -833,7 +846,7 @@ $(function() {
   });
   
   // Checkout
-  $('#btnCheckout').click(function() {
+  $('#btnCheckout').click(async function() {
     if (cart.length === 0) {
       alert('Your cart is empty');
       return;
@@ -845,8 +858,13 @@ $(function() {
       date: new Date().toISOString()
     };
     
-    orders.push(order);
-    localStorage.setItem('orders', JSON.stringify(orders));
+    if (store) {
+      await store.createOrder(order);
+      await refreshOrdersData();
+    } else {
+      orders.push(order);
+      localStorage.setItem('orders', JSON.stringify(orders));
+    }
     
     alert('Thank you for your order! Total: £' + total.toFixed(2));
     cart = [];
@@ -865,5 +883,7 @@ $(function() {
   initVoiceAssistant();
   initVoice();
   setVoiceAssistantEnabled(voiceAssistantEnabled, false);
+  refreshMenuData();
+  refreshOrdersData();
   updateCart();
 });

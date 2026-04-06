@@ -7,8 +7,23 @@ Voice Restaurant project with voice menu, cart, and admin management.
 
 ## File structure
 - `src/pages/` HTML pages
-- `src/js/` JavaScript files (`script.js`, `admin.js`)
+- `src/js/` JavaScript files (`script.js`, `admin.js`, `data-store.js`, `backend-config.js`)
 - `src/css/` Stylesheet (`style.css`)
+
+## Shared data across browsers (optional backend)
+
+By default, the app uses browser `localStorage`, so data is per-browser only.
+
+To share menu/orders across browsers, configure Supabase:
+
+1. Create `menu_items` and `orders` tables in Supabase.
+2. Open `src/js/backend-config.js`.
+3. Set:
+	- `supabaseUrl`
+	- `anonKey`
+4. Keep table names as default (`menu_items`, `orders`) or update them.
+
+When configured, storefront and admin pages will read/write via Supabase REST, with local fallback if backend is unavailable.
 
 ## Admin flow
 1. Open `admin-login.html`.

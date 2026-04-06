@@ -1,14 +1,15 @@
 // Admin script for admin.html
 $(function() {
   console.log('Admin script loaded');
+  const store = window.RedLanternStore;
 
-  let foodMenu = JSON.parse(localStorage.getItem('foodMenu')) || [
-    { id: 1, name: '🍕 Pizza', desc: 'Cheese pizza', price: 12.99 },
-    { id: 2, name: '🍔 Burger', desc: 'Juicy burger', price: 10.99 },
-    { id: 3, name: '🍜 Pasta', desc: 'Italian pasta', price: 13.99 }
+  let foodMenu = (store && store.getCachedMenu()) || [
+    { id: 1, number: 1, name: '🍕 Pizza', desc: 'Cheese pizza', price: 12.99 },
+    { id: 2, number: 2, name: '🍔 Burger', desc: 'Juicy burger', price: 10.99 },
+    { id: 3, number: 3, name: '🍜 Pasta', desc: 'Italian pasta', price: 13.99 }
   ];
 
-  let orders = JSON.parse(localStorage.getItem('orders')) || [];
+  let orders = (store && store.getCachedOrders()) || [];
 
   const adminPanel = $('#adminPanel');
   const adminLogoutBtn = $('#adminLogout');
@@ -19,6 +20,12 @@ $(function() {
   const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8 MB hard cap before processing
   const MAX_IMAGE_DIMENSION = 800;
   const JPEG_QUALITY = 0.8;
+
+  async function refreshDataFromStore() {
+    if (!store) return;
+    foodMenu = await store.getMenu();
+    orders = await store.getOrders();
+  }
 
   // --- Session expiry helpers ---
   function setAdminSession() {
@@ -68,11 +75,16 @@ $(function() {
       adminMenuList.append(item);
     });
 
-    $('.delete-food').click(function() {
+    $('.delete-food').click(async function() {
       const id = $(this).data('id');
       if (confirm('Delete this item?')) {
-        foodMenu = foodMenu.filter(f => f.id != id);
-        localStorage.setItem('foodMenu', JSON.stringify(foodMenu));
+        if (store) {
+          await store.deleteMenuItem(id);
+          await refreshDataFromStore();
+        } else {
+          foodMenu = foodMenu.filter(f => f.id != id);
+          localStorage.setItem('foodMenu', JSON.stringify(foodMenu));
+        }
         renderAdminDashboard();
       }
     });
@@ -190,11 +202,15 @@ $(function() {
       newFood.image = imageData;
     }
 
-    foodMenu.push(newFood);
     try {
-      localStorage.setItem('foodMenu', JSON.stringify(foodMenu));
+      if (store) {
+        await store.createMenuItem(newFood);
+        await refreshDataFromStore();
+      } else {
+        foodMenu.push(newFood);
+        localStorage.setItem('foodMenu', JSON.stringify(foodMenu));
+      }
     } catch (e) {
-      foodMenu.pop();
       if (e.name === 'QuotaExceededError') {
         alert('Storage is full. Please remove some existing menu images.');
         return;
@@ -207,21 +223,9 @@ $(function() {
     alert('✓ Food item created!');
   });
 
-  // Ensure each food item has a unique number
-  function assignFoodNumbers() {
-    let nextNum = 1;
-    foodMenu.forEach(food => {
-      if (!food.number) {
-        // Find next unused number
-        while (foodMenu.some(f => f.number === nextNum)) nextNum++;
-        food.number = nextNum;
-        nextNum++;
-      }
-    });
-    localStorage.setItem('foodMenu', JSON.stringify(foodMenu));
-  }
-
-  assignFoodNumbers();
-  setAdminSession();
-  renderAdminDashboard();
+  (async function initAdminDashboard() {
+    await refreshDataFromStore();
+    setAdminSession();
+    renderAdminDashboard();
+  })();
 });
