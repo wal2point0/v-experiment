@@ -119,10 +119,9 @@
             '?select=id,number,name,description,price,image&order=number.asc,id.asc'
           );
           const normalized = normalizeMenu(rows || []);
-          if (normalized.length) {
-            writeJson('foodMenu', normalized);
-            return normalized;
-          }
+          // Respect backend as the source of truth, even when the menu is empty.
+          writeJson('foodMenu', normalized);
+          return normalized;
         } catch (e) {
           console.warn('Falling back to local menu data:', e);
         }
@@ -167,7 +166,7 @@
         id: Math.max(0, ...localMenu.map(i => Number(i.id || 0))) + 1,
         number: normalizedItem.number || Math.max(0, ...localMenu.map(i => Number(i.number || 0))) + 1,
         name: normalizedItem.name,
-        desc: normalizedItem.desc,
+        desc: normalizedItem.description,
         price: normalizedItem.price,
         image: normalizedItem.image
       };
