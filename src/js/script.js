@@ -332,7 +332,25 @@ $(function() {
       return;
     }
 
-    const maxCaptureMs = awaitingAssistantResponse ? 4500 : 7000;
+    const maxCaptureMs = awaitingAssistantResponse ? 3800 : 5500;
+    const silenceMsToStop = awaitingAssistantResponse ? 700 : 900;
+    const voiceLevelThreshold = 0.02;
+
+    let cloudAudioContext = null;
+    let cloudSilenceInterval = null;
+    let heardVoice = false;
+    let lastVoiceAtMs = Date.now();
+
+    const cleanupCloudAudioMonitor = function() {
+      if (cloudSilenceInterval) {
+        clearInterval(cloudSilenceInterval);
+        cloudSilenceInterval = null;
+      }
+      if (cloudAudioContext && typeof cloudAudioContext.close === 'function') {
+        cloudAudioContext.close().catch(function() {});
+      }
+      cloudAudioContext = null;
+    };
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -342,6 +360,54 @@ $(function() {
       mediaRecorderChunks = [];
       mediaRecorder = new MediaRecorder(stream, recorderOptions);
       cloudCaptureInProgress = true;
+
+      // Stop shortly after speech ends to reduce user wait before transcription.
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          cloudAudioContext = new AudioCtx();
+          if (cloudAudioContext.state === 'suspended' && typeof cloudAudioContext.resume === 'function') {
+            cloudAudioContext.resume().catch(function() {});
+          }
+
+          const analyser = cloudAudioContext.createAnalyser();
+          analyser.fftSize = 2048;
+          const sourceNode = cloudAudioContext.createMediaStreamSource(stream);
+          sourceNode.connect(analyser);
+          const sample = new Uint8Array(analyser.fftSize);
+
+          cloudSilenceInterval = setInterval(function() {
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+              return;
+            }
+
+            analyser.getByteTimeDomainData(sample);
+            let sumSquares = 0;
+            for (let i = 0; i < sample.length; i++) {
+              const normalized = (sample[i] - 128) / 128;
+              sumSquares += normalized * normalized;
+            }
+            const rms = Math.sqrt(sumSquares / sample.length);
+            const now = Date.now();
+
+            if (rms >= voiceLevelThreshold) {
+              heardVoice = true;
+              lastVoiceAtMs = now;
+              return;
+            }
+
+            if (heardVoice && (now - lastVoiceAtMs) >= silenceMsToStop) {
+              try {
+                mediaRecorder.stop();
+              } catch (e) {
+                console.warn('Could not stop cloud recorder after silence:', e);
+              }
+            }
+          }, 120);
+        }
+      } catch (e) {
+        console.warn('Cloud silence monitor unavailable, using timeout only:', e);
+      }
 
       mediaRecorder.ondataavailable = function(event) {
         if (event.data && event.data.size > 0) {
@@ -362,6 +428,7 @@ $(function() {
 
         stream.getTracks().forEach(function(track) { track.stop(); });
         cloudCaptureInProgress = false;
+        cleanupCloudAudioMonitor();
 
         if (!mediaRecorderChunks.length) {
           voiceStatus.text('⚠️ No speech detected. Try again.');
@@ -423,6 +490,7 @@ $(function() {
     } catch (e) {
       console.warn('Could not start cloud voice capture:', e);
       cloudCaptureInProgress = false;
+      cleanupCloudAudioMonitor();
       if (isIOSSafari && cloudSTTSupported) {
         voiceStatus.text('⚠️ Could not access microphone for cloud STT');
       } else {
@@ -520,7 +588,8 @@ $(function() {
       return;
     }
 
-    if (safariClipKey && playSafariAssistantAudio(safariClipKey, listenAfter)) {
+    const preferTtsForCloudSafariFollowUp = isIOSSafari && cloudSTTSupported && safariClipKey === 'anythingElse';
+    if (!preferTtsForCloudSafariFollowUp && safariClipKey && playSafariAssistantAudio(safariClipKey, listenAfter)) {
       return;
     }
 
