@@ -449,10 +449,12 @@ $(function() {
             return;
           }
 
-          finalSpan.text(transcript);
+          finalSpan.text('🗣️ ' + transcript);
           interimSpan.text('');
-          voiceStatus.text('✓ Done listening');
-          processVoiceCommand(transcript);
+          voiceStatus.text('✓ Transcribed');
+          setTimeout(function() {
+            processVoiceCommand(transcript);
+          }, 550);
         } catch (e) {
           console.warn('Cloud STT failed:', e);
           if (isIOSSafari && cloudSTTSupported) {
@@ -588,6 +590,12 @@ $(function() {
       return;
     }
 
+    if (/anything else\?/i.test(text)) {
+      voiceStatus.text('🤖 Anything else?');
+      finalSpan.text('🤖 Anything else?');
+      interimSpan.text('');
+    }
+
     const preferTtsForCloudSafariFollowUp = isIOSSafari && cloudSTTSupported && safariClipKey === 'anythingElse';
     if (!preferTtsForCloudSafariFollowUp && safariClipKey && playSafariAssistantAudio(safariClipKey, listenAfter)) {
       return;
@@ -619,6 +627,7 @@ $(function() {
       };
     }
 
+    window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
   }
 
