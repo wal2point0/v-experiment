@@ -50,7 +50,7 @@ $(function() {
     navigator.mediaDevices &&
     navigator.mediaDevices.getUserMedia
   );
-  const cloudSTTPreferred = isIOSSafari;
+  let cloudSTTPreferred = isIOSSafari;
   const safariAssistantAudio = {
     intro: new Audio('../assets/audio/introSpeech.mp3'),
     anythingElse: new Audio('../assets/audio/anythingElse.mp3'),
@@ -504,13 +504,20 @@ $(function() {
           }, 550);
         } catch (e) {
           console.warn('Cloud STT failed:', e);
-          if (isIOSSafari && cloudSTTSupported) {
-            finalSpan.text('');
-            interimSpan.text('');
-            voiceStatus.text('⚠️ Cloud transcription failed. Check function auth/origin settings.');
-          } else if (recognition) {
-            voiceStatus.text('⚠️ Cloud transcription failed. Falling back to browser voice.');
-            startVoiceRecognition(false);
+          const errorText = String((e && e.message) || e || '').toLowerCase();
+          const canUseBrowserFallback = !!recognition;
+
+          finalSpan.text('');
+          interimSpan.text('');
+          cloudSTTPreferred = false;
+
+          if (canUseBrowserFallback) {
+            voiceStatus.text('⚠️ Cloud transcription failed. Switching to browser voice...');
+            setTimeout(function() {
+              startVoiceRecognition(false);
+            }, 150);
+          } else if (errorText.includes('missing audio') || errorText.includes('microphone')) {
+            voiceStatus.text('⚠️ No audio was captured. Please try again.');
           } else {
             voiceStatus.text('⚠️ Cloud transcription failed. Please try again.');
           }
