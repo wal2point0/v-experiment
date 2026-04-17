@@ -919,6 +919,10 @@ $(function() {
   function normalizeVoiceCommand(text) {
     return text
       .toLowerCase()
+      .replace(/showcart/g, 'show cart')
+      .replace(/showcard/g, 'show cart')
+      .replace(/showcourt/g, 'show cart')
+      .replace(/showmenu/g, 'show menu')
       .replace(/\bcard\b/g, 'cart')
       .replace(/\bcourt\b/g, 'cart')
       .replace(/\bcarte\b/g, 'cart')
@@ -929,7 +933,7 @@ $(function() {
   }
 
   function isShowCartCommand(text) {
-    return /\b(show|open|view|check)\b/.test(text) && /\bcart\b/.test(text);
+    return /\b(show|open|view|check)\b/.test(text) && /\bcart\b/.test(text) || /show(cart|card|court)/i.test(text);
   }
 
   function isCartMention(text) {
